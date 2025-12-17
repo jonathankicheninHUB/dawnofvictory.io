@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoV COMMANDER v6.0 (ULTIMATE)</title>
+    <title>DoV COMMANDER v7.0 (ULTIMATE)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -15,10 +15,8 @@
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
         .animate-fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        /* Style spécifique scanner */
         .scan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; }
     </style>
 </head>
@@ -29,75 +27,95 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        // ==========================================
-        // 1. MEGA-BASE DE DONNÉES (Fusion Fichiers 28 & 30)
-        // ==========================================
+        // ==================================================================================
+        // 1. DATA LAYER (CONSTANTES & BASES DE DONNÉES)
+        // ==================================================================================
 
-        const RPCS = ["https://wax.greymass.com", "https://api.waxsweden.org", "https://wax.eosn.io", "https://api.wax.alohaeos.com", "https://api-wax.eosarabia.net", "https://wax.bountyblok.io"];
+        const RPCS = ["https://wax.greymass.com", "https://api.waxsweden.org", "https://wax.eosn.io", "https://api.wax.alohaeos.com", "https://api-wax.eosarabia.net"];
         const INITIAL_PRICES = { WAX: 1, DOVX: 0.005285, DOVR: 0.00045, DOVH: 0.00045, DOVF: 0.00045, DOVS: 0.00045 };
 
-        // --- DONNÉES MANAGER (Fichier 28) ---
-        const ZONES_FULL = [
-            { id: 1, name: 'Beach 1', type: 'Beach', win: 400, usage: 1160, minWeight: 14, keyReq: 0, officerReq: 1 },
-            { id: 2, name: 'Beach 2', type: 'Beach', win: 2405, usage: 6968, minWeight: 28, keyReq: 5, officerReq: 2 },
-            { id: 3, name: 'Beach 3', type: 'Beach', win: 3037, usage: 8800, minWeight: 55, keyReq: 6, officerReq: 3 },
-            { id: 4, name: 'Bunker', type: 'Beach', win: 3838, usage: 11120, minWeight: 109, keyReq: 7, officerReq: 4, isCheckpoint: true, unitReq: 'e2' }, 
-            { id: 5, name: 'Forest 1', type: 'Forest', win: 4840, usage: 14024, minWeight: 219, keyReq: 8, officerReq: 5 },
-            { id: 6, name: 'Forest 2', type: 'Forest', win: 6110, usage: 17704, minWeight: 342, keyReq: 9, officerReq: 6 },
-            { id: 7, name: 'Forest 3', type: 'Forest', win: 7714, usage: 22352, minWeight: 450, keyReq: 10, officerReq: 7 },
-            { id: 8, name: 'Camp', type: 'Forest', win: 9739, usage: 28220, minWeight: 512, keyReq: 11, officerReq: 8, isCheckpoint: true, unitReq: 'e1' },
-            { id: 9, name: 'Hill 1', type: 'Hill', win: 12788, usage: 37052, minWeight: 695, keyReq: 12, officerReq: 9 },
-            { id: 10, name: 'Hill 2', type: 'Hill', win: 16791, usage: 48652, minWeight: 869, keyReq: 13, officerReq: 10 },
-            { id: 11, name: 'Hill 3', type: 'Hill', win: 22266, usage: 64516, minWeight: 1086, keyReq: 14, officerReq: 11 },
-            { id: 12, name: 'Radar', type: 'Hill', win: 29236, usage: 84712, minWeight: 1358, keyReq: 15, officerReq: 12, isCheckpoint: true, unitReq: 'e3', godmotherReq: true },
-            { id: 13, name: 'Plain 1', type: 'Plain', win: 34300, usage: 99384, minWeight: 1697, keyReq: 16, officerReq: 13 },
-            { id: 14, name: 'Plain 2', type: 'Plain', win: 43385, usage: 125708, minWeight: 1866, keyReq: 17, officerReq: 14 },
-            { id: 15, name: 'Plain 3', type: 'Plain', win: 52171, usage: 151164, minWeight: 2052, keyReq: 18, officerReq: 15 },
-            { id: 16, name: 'HQ', type: 'Plain', win: 64884, usage: 188000, minWeight: 2495, keyReq: 19, officerReq: 16, isCheckpoint: true, unitReq: 'l1', godmotherReq: true },
-            { id: 17, name: 'City 1', type: 'City', win: 0, usage: 0, entryCostDovX: 777.35, minWeight: 108.53, keyReq: 9, officerReq: 1 },
-            { id: 18, name: 'City 2', type: 'City', win: 0, usage: 0, entryCostDovX: 2213.87, minWeight: 511.76, keyReq: 13, officerReq: 1 },
-            { id: 19, name: 'City 3', type: 'City', win: 0, usage: 0, entryCostDovX: 6677.85, minWeight: 1357.04, keyReq: 17, officerReq: 1 },
-            { id: 20, name: 'City 4', type: 'City', win: 0, usage: 0, entryCostDovX: 14850.80, minWeight: 2494.23, keyReq: 20, officerReq: 1 } 
+        // --- ICONS ---
+        const Icon = ({d, c="text-current", s=20}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={c}><path d={d}/></svg>;
+        const Icons = {
+            Shield: () => <Icon d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
+            Factory: () => <Icon d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>,
+            Radar: () => <Icon d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 6 6 0 1 1-5.32-5.32M22 2l-8.3 8.3M22 2h-4M22 2v4"/>,
+            Flask: () => <Icon d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>,
+            Gift: () => <Icon d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>,
+            Crosshair: () => <Icon d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 6 6 0 1 1-5.32-5.32"/>, // Simplified
+            Scale: () => <Icon d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1zM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>,
+            Users: () => <Icon d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M16 3.13a4 4 0 0 1 0 7.75 M23 21v-2a4 4 0 0 0-3-3.87"/>,
+            Key: () => <Icon d="M21 2l-2 2m-7.6 7.6a6.5 6.5 0 1 1-5.3 5.3L3 21l3-3 2.1-2.1a2 2 0 0 1 2.8 0L13.4 13.4a2 2 0 0 1 0 2.8l-4.3 4.3"/>
+        };
+
+        // --- ZONE DB (UNIFIÉE) ---
+        const MASTER_ZONES_DB = [
+            { id: 1, name: 'Beach 1', type: 'Beach', reward: 400, cost: 1160, costX: 0, minWeight: 14, officerReq: 1, keyReq: 0 },
+            { id: 2, name: 'Beach 2', type: 'Beach', reward: 2405, cost: 6968, costX: 0, minWeight: 28, officerReq: 2, keyReq: 5 },
+            { id: 3, name: 'Beach 3', type: 'Beach', reward: 3037, cost: 8800, costX: 0, minWeight: 55, officerReq: 3, keyReq: 6 },
+            { id: 4, name: 'Bunker',  type: 'Beach', reward: 3838, cost: 11120, costX: 0, minWeight: 109, officerReq: 4, keyReq: 7, isCheckpoint: true, unitReq: 'e2' }, 
+            { id: 5, name: 'Forest 1', type: 'Forest', reward: 4840, cost: 14024, costX: 0, minWeight: 219, officerReq: 5, keyReq: 8 },
+            { id: 6, name: 'Forest 2', type: 'Forest', reward: 6110, cost: 17704, costX: 0, minWeight: 342, officerReq: 6, keyReq: 9 },
+            { id: 7, name: 'Forest 3', type: 'Forest', reward: 7714, cost: 22352, costX: 0, minWeight: 450, officerReq: 7, keyReq: 10 },
+            { id: 8, name: 'Camp',     type: 'Forest', reward: 9739, cost: 28220, costX: 0, minWeight: 512, officerReq: 8, keyReq: 11, isCheckpoint: true, unitReq: 'e1' }, 
+            { id: 9,  name: 'Hill 1', type: 'Hill', reward: 12788, cost: 37052, costX: 0, minWeight: 695, officerReq: 9, keyReq: 12 },
+            { id: 10, name: 'Hill 2', type: 'Hill', reward: 16791, cost: 48652, costX: 0, minWeight: 869, officerReq: 10, keyReq: 13 },
+            { id: 11, name: 'Hill 3', type: 'Hill', reward: 22266, cost: 64516, costX: 0, minWeight: 1086, officerReq: 11, keyReq: 14 },
+            { id: 12, name: 'Radar',  type: 'Hill', reward: 29236, cost: 84712, costX: 0, minWeight: 1358, officerReq: 12, keyReq: 15, isCheckpoint: true, unitReq: 'e3', godmotherReq: true },
+            { id: 13, name: 'Plain 1', type: 'Plain', reward: 34300, cost: 99384, costX: 0, minWeight: 1697, officerReq: 13, keyReq: 16 },
+            { id: 14, name: 'Plain 2', type: 'Plain', reward: 43385, cost: 125708, costX: 0, minWeight: 1866, officerReq: 14, keyReq: 17 },
+            { id: 15, name: 'Plain 3', type: 'Plain', reward: 52171, cost: 151164, costX: 0, minWeight: 2052, officerReq: 15, keyReq: 18 },
+            { id: 16, name: 'HQ',      type: 'Plain', reward: 64884, cost: 188000, costX: 0, minWeight: 2495, officerReq: 16, keyReq: 19, isCheckpoint: true, unitReq: 'l1', godmotherReq: true },
+            { id: 17, name: 'City 1', type: 'City', reward: 0, cost: 0, costX: 1664, minWeight: 108.5, officerReq: 1, keyReq: 9 },
+            { id: 18, name: 'City 2', type: 'City', reward: 0, cost: 0, costX: 4448, minWeight: 511.7, officerReq: 1, keyReq: 13 },
+            { id: 19, name: 'City 3', type: 'City', reward: 0, cost: 0, costX: 13440, minWeight: 1357, officerReq: 1, keyReq: 17 },
+            { id: 20, name: 'City 4', type: 'City', reward: 0, cost: 0, costX: 29120, minWeight: 2494, officerReq: 1, keyReq: 20 }
         ];
 
-        const generateFactories = () => {
-            const types = ['FUEL', 'REPAIR', 'SUPPLY', 'HEALTH'];
-            const rarities = [
-                { name: 'Common', levels: [ { l: 1, out: 5.40, cost: 0.4590 }, { l: 2, out: 12.15, cost: 1.0328 }, { l: 3, out: 30.38, cost: 2.5819 }, { l: 4, out: 83.53, cost: 7.1002 }, { l: 5, out: 1458.00, cost: 123.9300 } ]},
-                { name: 'Rare', levels: [ { l: 1, out: 16.20, cost: 1.3770 }, { l: 2, out: 36.45, cost: 3.0983 }, { l: 3, out: 91.13, cost: 7.7456 }, { l: 4, out: 250.59, cost: 21.3005 } ]},
-                { name: 'Epic', levels: [ { l: 1, out: 48.60, cost: 4.1310 }, { l: 2, out: 109.35, cost: 9.2948 }, { l: 3, out: 273.38, cost: 23.2369 }, { l: 4, out: 751.78, cost: 63.9014 } ]},
-                { name: 'Legendary', levels: [ { l: 1, out: 145.80, cost: 12.3930 }, { l: 2, out: 328.05, cost: 27.8843 }, { l: 3, out: 820.13, cost: 69.7106 }, { l: 4, out: 2255.34, cost: 191.7042 } ]}
-            ];
-            let list = [];
-            types.forEach(type => { rarities.forEach(rarity => { rarity.levels.forEach(level => {
-                list.push({ id: `${rarity.name.charAt(0)}_${type.charAt(0)}${level.l}`, name: `${rarity.name} ${type} ${level.l}`, type: type, rarity: rarity.name, level: level.l, output: level.out, costDoVX: level.cost });
-            }); }); });
-            return list;
-        };
-        const FACTORIES = generateFactories();
+        // --- TACTICAL DATABASE (Unités/Officiers/Clés du Fichier 28) ---
+        const ALL_OFFICERS = Array.from({length: 20}, (_, i) => ({ id: `o${i+1}`, name: `Officier Lvl ${i+1}`, order: i+1 }));
+        const ALL_KEYS = Array.from({length: 20}, (_, i) => ({ id: `k${i+1}`, name: `Clé Tactique Lvl ${i+1}`, order: i+1 }));
+        const ALL_GODMOTHERS = [{ id: 'gm1', name: 'Sonja Henie' }, { id: 'gm2', name: 'Miss Betty' }];
+        const ALL_SUPPORTS = [
+            { id: 's1', name: 'Medical Bn (0.5%)', bonusPct: 0.5 }, { id: 's2', name: 'Signal Bn (1.5%)', bonusPct: 1.5 },
+            { id: 's3', name: 'Medical 104th (2.5%)', bonusPct: 2.5 }, { id: 's4', name: 'Kiyo Spec (12%)', bonusPct: 12.0 }
+        ];
+        
+        const UNIT_TEMPLATES = [
+            { baseId: 'c1', name: 'Infantry', type: 'Infantry', rarity: 'Common', base: 0.3, b: { Beach: 1.0, Plain: 0.22, Forest: 1.0, Hill: 0.72, City: 0.01 } },
+            { baseId: 'c4', name: 'Artillery', type: 'Artillery', rarity: 'Common', base: 0.3, b: { Beach: 1.0, Plain: 1.0, Forest: 0.72, Hill: 1.0, City: 0.01 } },
+            { baseId: 'r1', name: 'Elite Inf', type: 'Infantry', rarity: 'Rare', base: 3.6, b: { Beach: 1.0, Plain: 0.22, Forest: 1.0, Hill: 1.0, City: 0.01 } },
+            { baseId: 'e3', name: 'Heavy Tank', type: 'Tank', rarity: 'Epic', base: 8.42, b: { Beach: 0.22, Plain: 1.0, Forest: 0.22, Hill: 0.72, City: 0.01 } },
+            { baseId: 'l1', name: 'Legend Tank', type: 'Tank', rarity: 'Legendary', base: 57.6, b: { Beach: 0.22, Plain: 1.0, Forest: 0.22, Hill: 0.72, City: 0.01 } },
+        ];
+        // Génération des unités F1-F4
+        const ALL_UNITS = [];
+        UNIT_TEMPLATES.forEach(tpl => {
+            for (let l = 1; l <= 4; l++) {
+                ALL_UNITS.push({ 
+                    id: `${tpl.baseId}_f${l}`, name: `F${l} ${tpl.name}`, type: tpl.type, 
+                    rarity: tpl.rarity, baseWeight: tpl.base * Math.pow(3, l-1), bonuses: tpl.b 
+                });
+            }
+        });
 
-        // --- ICONS ---
-        const Icon = ({p, c="text-current", s=20}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={c}><path d={p}/></svg>;
-        const I = {
-            Radar: (p) => <Icon {...p} p="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 6 6 0 1 1-5.32-5.32M22 2l-8.3 8.3M22 2h-4M22 2v4"/>,
-            Factory: (p) => <Icon {...p} p="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>,
-            Combat: (p) => <Icon {...p} p="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>,
-            Flask: (p) => <Icon {...p} p="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>,
-            Scale: (p) => <Icon {...p} p="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Zm-14 0 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1ZM7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>
-        };
+        // Inventaire Mock pour le module Combat
+        const MOCK_INVENTORY = { keys: ALL_KEYS, officers: ALL_OFFICERS, supports: ALL_SUPPORTS, godmothers: ALL_GODMOTHERS, units: ALL_UNITS };
 
         const Card = ({ children, className = "" }) => <div className={`bg-slate-800 border border-slate-700 rounded-lg p-4 shadow-xl ${className}`}>{children}</div>;
 
-        // ==========================================
-        // 2. MODULE : SCANNER LIVE (Le "Moteur" V61)
-        // ==========================================
+        // ==================================================================================
+        // 2. MODULES (Scanner, Combat, Blend)
+        // ==================================================================================
+
+        // --- MODULE SCANNER (PHASE 2) ---
         const LiveScanner = ({ targetUser, onUpdate }) => {
             const [scanning, setScanning] = useState(false);
             const [logs, setLogs] = useState([]);
-            const [stats, setStats] = useState({ total: 0, ready: 0, busy: 0, typeF:0, typeH:0, typeR:0, typeS:0 });
-            const [localBuildings, setLocalBuildings] = useState([]);
+            const [scanStats, setScanStats] = useState({ total: 0, ready: 0, busy: 0, F:0, H:0, R:0, S:0 });
+            const [buildingsList, setBuildingsList] = useState([]);
 
-            const log = (msg) => setLogs(prev => [`> ${msg}`, ...prev].slice(0, 6));
+            const addLog = (msg) => setLogs(prev => [`> ${msg}`, ...prev].slice(0, 5));
 
             const fetchTable = async (code, table, lower) => {
                 let attempts = 0;
@@ -115,9 +133,8 @@
             };
 
             const startScan = async () => {
-                setScanning(true); setLocalBuildings([]); setLogs([]);
-                log(`Scan complet pour ${targetUser}...`);
-                
+                setScanning(true); setBuildingsList([]); setLogs([]);
+                addLog(`Scan de ${targetUser}...`);
                 let allBuildings = [];
                 let nextKey = "";
                 let hasMore = true;
@@ -127,76 +144,54 @@
                     while(hasMore) {
                         const data = await fetchTable("dovutilstake", "buildings", nextKey);
                         if(!data.rows || !data.rows.length) break;
-                        
                         const batch = data.rows.filter(r => r.owner === targetUser);
                         const now = Date.now()/1000;
-
                         batch.forEach(b => {
                             c.total++;
                             const isReady = now > (parseFloat(b.last_claim) + parseFloat(b.delay));
                             if(isReady) c.ready++; else c.busy++;
-                            
                             const pRaw = Array.isArray(b.power) ? b.power[0] : b.power;
-                            if(pRaw.includes("DOVF")) c.F++;
-                            else if(pRaw.includes("DOVH")) c.H++;
-                            else if(pRaw.includes("DOVR")) c.R++;
-                            else if(pRaw.includes("DOVS")) c.S++;
-
+                            if(pRaw.includes("DOVF")) c.F++; else if(pRaw.includes("DOVH")) c.H++;
+                            else if(pRaw.includes("DOVR")) c.R++; else if(pRaw.includes("DOVS")) c.S++;
                             allBuildings.push({ ...b, isReady, pRaw });
                         });
-
-                        setStats({...c, typeF:c.F, typeH:c.H, typeR:c.R, typeS:c.S});
-                        setLocalBuildings(prev => [...prev, ...batch.map(b => {
+                        setScanStats({...c});
+                        setBuildingsList(prev => [...prev, ...batch.map(b => {
                              const now = Date.now()/1000;
                              return { ...b, isReady: now > (parseFloat(b.last_claim) + parseFloat(b.delay)), pRaw: Array.isArray(b.power) ? b.power[0] : b.power };
                         })]);
-
                         if(data.more && data.next_key !== nextKey) nextKey = data.next_key; else hasMore = false;
-                        log(`Chargé ${allBuildings.length} bâtiments...`);
+                        addLog(`Batch: ${batch.length} bâtiments.`);
                     }
-                    
                     // Scan Divisions
+                    addLog("Récupération divisions...");
                     const divData = await fetchTable("dovpvecontrl", "sdivisions", targetUser);
                     const divs = divData.rows ? divData.rows.filter(r => r.owner === targetUser || r.user === targetUser) : [];
-                    log(`Divisions trouvées : ${divs.length}`);
-
                     onUpdate(allBuildings, divs);
-                    log("Scan terminé avec succès.");
-
-                } catch(e) { log("Erreur: " + e.message); }
+                    addLog(`Terminé! ${c.total} Bâtiments, ${divs.length} Divs.`);
+                } catch(e) { addLog("Erreur: " + e.message); }
                 setScanning(false);
             };
 
             return (
-                <div className="space-y-4">
+                <div className="space-y-4 mb-6">
                     <Card className="border-l-4 border-purple-500">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-purple-400 flex items-center gap-2"><I.Radar/> SCANNER LIVE (BLOCKCHAIN)</h3>
-                            <button onClick={startScan} disabled={scanning} className={`px-6 py-2 rounded font-bold ${scanning ? 'bg-slate-700' : 'bg-purple-600 hover:bg-purple-500'}`}>
+                            <h3 className="font-bold text-purple-400 flex items-center gap-2"><Icons.Radar/> SCANNER LIVE</h3>
+                            <button onClick={startScan} disabled={scanning} className={`px-6 py-2 rounded font-bold ${scanning?'bg-slate-700':'bg-purple-600 hover:bg-purple-500'}`}>
                                 {scanning ? 'SCAN EN COURS...' : 'LANCER SCAN'}
                             </button>
                         </div>
-                        <div className="grid grid-cols-4 gap-4 text-center mb-4">
-                            <div className="bg-slate-900 p-2 rounded"><div className="text-xs text-slate-400">TOTAL</div><div className="text-xl font-bold">{stats.total}</div></div>
-                            <div className="bg-slate-900 p-2 rounded border border-emerald-500/30"><div className="text-xs text-emerald-400">PRÊTS</div><div className="text-xl font-bold text-emerald-400">{stats.ready}</div></div>
-                            <div className="bg-slate-900 p-2 rounded border border-orange-500/30"><div className="text-xs text-orange-400">ACTIFS</div><div className="text-xl font-bold text-orange-400">{stats.busy}</div></div>
-                            <div className="bg-slate-900 p-2 rounded flex flex-col justify-center text-[10px]">
-                                <div className="flex justify-between px-2"><span className="text-orange-300">F: {stats.typeF}</span><span className="text-red-300">H: {stats.typeH}</span></div>
-                                <div className="flex justify-between px-2"><span className="text-slate-300">R: {stats.typeR}</span><span className="text-yellow-300">S: {stats.typeS}</span></div>
+                        <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                            <div className="bg-slate-900 p-2 rounded"><div className="text-slate-400">TOTAL</div><div className="text-lg font-bold">{scanStats.total}</div></div>
+                            <div className="bg-slate-900 p-2 rounded border border-emerald-500/30"><div className="text-emerald-400">PRÊTS</div><div className="text-lg font-bold text-emerald-400">{scanStats.ready}</div></div>
+                            <div className="bg-slate-900 p-2 rounded border border-orange-500/30"><div className="text-orange-400">ACTIFS</div><div className="text-lg font-bold text-orange-400">{scanStats.busy}</div></div>
+                            <div className="bg-slate-900 p-2 rounded flex flex-col justify-center">
+                                <div className="flex justify-between"><span className="text-orange-300">F:{scanStats.F}</span><span className="text-red-300">H:{scanStats.H}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-300">R:{scanStats.R}</span><span className="text-yellow-300">S:{scanStats.S}</span></div>
                             </div>
                         </div>
-                        {/* LISTE BATIMENTS */}
-                        {localBuildings.length > 0 && (
-                            <div className="scan-grid max-h-[300px] overflow-y-auto pr-2">
-                                {localBuildings.map((b, i) => (
-                                    <div key={i} className={`p-2 rounded border text-xs ${b.isReady ? 'bg-emerald-900/20 border-emerald-800' : 'bg-slate-900 border-slate-700'}`}>
-                                        <div className="flex justify-between font-bold mb-1"><span>#{b.asset_id}</span><span className={b.isReady?'text-emerald-400':'text-orange-400'}>{b.isReady?'CLAIM':'BUSY'}</span></div>
-                                        <div className="text-[10px] text-slate-400">{b.pRaw}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        <div className="mt-4 bg-black p-2 rounded font-mono text-[10px] text-slate-500 h-20 overflow-y-auto">
+                        <div className="mt-4 bg-black p-2 rounded font-mono text-[10px] text-slate-500 h-16 overflow-y-auto">
                             {logs.map((l, i) => <div key={i}>{l}</div>)}
                         </div>
                     </Card>
@@ -204,215 +199,235 @@
             );
         };
 
-        // ==========================================
-        // 3. MODULE : BLEND SIMULATOR (Fichier 29)
-        // ==========================================
-        const BlendSim = ({ prices, waxPrice }) => {
-            const [zone, setZone] = useState('CITY');
-            const [inv, setInv] = useState({ F1:0, F4:0 });
+        // --- MODULE COMBAT (PHASE 4 - Adapté du Fichier 28) ---
+        const CombatModule = ({ waxPrice }) => {
+            const [zoneId, setZoneId] = useState(1);
+            const [squad, setSquad] = useState([]);
+            const [officer, setOfficer] = useState(null);
             
-            const runSim = () => {
-                // Simulation simple basée sur les probs du fichier 29
-                let f1 = inv.F1; let f4 = inv.F4;
-                for(let i=0; i<100; i++) {
-                    const r = Math.random();
-                    if(zone === 'CITY') { f1++; } // City ne drop que du F1
-                    else { // Bunker drop F4 rare
-                        if(r < 0.0008) f4++; else f1++;
-                    }
-                }
-                setInv({F1: f1, F4: f4});
+            const zone = MASTER_ZONES_DB.find(z => z.id === parseInt(zoneId));
+            
+            const stats = useMemo(() => {
+                let weight = 0;
+                squad.forEach(u => {
+                    const bonus = u.bonuses[zone.type] || 1.0;
+                    weight += u.baseWeight * bonus;
+                });
+                return { weight };
+            }, [squad, zone]);
+
+            const toggleUnit = (u) => {
+                if(squad.find(i=>i.id===u.id)) setSquad(squad.filter(i=>i.id!==u.id));
+                else if(squad.length < 10) setSquad([...squad, u]);
             };
 
             return (
-                <Card className="border-t-4 border-pink-500">
-                    <h3 className="text-lg font-bold text-pink-400 mb-4 flex items-center gap-2"><I.Flask/> SIMULATEUR DE BLEND</h3>
-                    <div className="grid grid-cols-2 gap-6">
-                        <div>
-                            <div className="flex gap-2 mb-4">
-                                <button onClick={()=>setZone('CITY')} className={`flex-1 py-2 rounded text-sm font-bold ${zone==='CITY'?'bg-pink-600':'bg-slate-700'}`}>CITY (F1)</button>
-                                <button onClick={()=>setZone('BUNKER')} className={`flex-1 py-2 rounded text-sm font-bold ${zone==='BUNKER'?'bg-yellow-600':'bg-slate-700'}`}>BUNKER (Chance F4)</button>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+                    <div className="lg:col-span-1 space-y-4">
+                        <Card>
+                            <h3 className="font-bold text-blue-400 mb-2">1. Cible</h3>
+                            <select className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm" value={zoneId} onChange={e=>setZoneId(e.target.value)}>
+                                {MASTER_ZONES_DB.map(z => <option key={z.id} value={z.id}>{z.name} (Min: {z.minWeight})</option>)}
+                            </select>
+                            <div className="mt-4 text-xs text-slate-400">
+                                <div className="flex justify-between"><span>Win:</span> <span className="text-emerald-400">{zone.reward} DOVX</span></div>
+                                <div className="flex justify-between"><span>Coût:</span> <span className="text-red-400">{zone.cost > 0 ? zone.cost/4 + ' TU x4' : zone.costX + ' DOVX'}</span></div>
                             </div>
-                            <button onClick={runSim} className="w-full bg-pink-700 hover:bg-pink-600 font-bold py-2 rounded mb-2">OUVRIR 100 PACKS (SIM)</button>
-                            <p className="text-xs text-slate-400">Simule les probabilités de drop (0.08% F4 sur Bunker).</p>
+                        </Card>
+                        <Card>
+                            <h3 className="font-bold text-yellow-400 mb-2">2. État Major</h3>
+                            <select className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm mb-2" onChange={e=>setOfficer(MOCK_INVENTORY.officers.find(o=>o.id===e.target.value))}>
+                                <option>-- Officier --</option>
+                                {MOCK_INVENTORY.officers.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}
+                            </select>
+                            <div className={`text-xs p-2 rounded border ${officer && officer.order >= zone.officerReq ? 'bg-green-900/30 border-green-500 text-green-400' : 'bg-red-900/30 border-red-500 text-red-400'}`}>
+                                Requis: Officier Lvl {zone.officerReq}
+                            </div>
+                        </Card>
+                    </div>
+                    <div className="lg:col-span-2">
+                        <Card className="h-full">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="font-bold text-white">3. Escouade ({squad.length}/10)</h3>
+                                <div className={`px-3 py-1 rounded text-sm font-bold ${stats.weight >= zone.minWeight ? 'bg-emerald-600' : 'bg-red-600'}`}>
+                                    Puissance: {stats.weight.toFixed(1)} / {zone.minWeight}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto pr-2">
+                                {MOCK_INVENTORY.units.map(u => {
+                                    const selected = squad.find(i=>i.id===u.id);
+                                    const bonus = u.bonuses[zone.type] || 0;
+                                    const eff = u.baseWeight * bonus;
+                                    return (
+                                        <div key={u.id} onClick={()=>toggleUnit(u)} className={`p-2 rounded border cursor-pointer text-xs ${selected?'bg-blue-900/40 border-blue-500':'bg-slate-900 border-slate-700'}`}>
+                                            <div className="font-bold text-white">{u.name}</div>
+                                            <div className="flex justify-between mt-1 text-slate-400">
+                                                <span>{u.rarity}</span>
+                                                <span className={bonus>=1?'text-emerald-400':'text-red-400'}>{eff.toFixed(1)}</span>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MODULE BLEND (PHASE 4 - Adapté du Fichier 29) ---
+        const BlendModule = () => {
+            const [mode, setMode] = useState('CITY');
+            const [res, setRes] = useState({ f1:0, f4:0 });
+            
+            const sim = () => {
+                let f1=0, f4=0;
+                for(let i=0;i<100;i++) {
+                    if(mode==='CITY') f1++;
+                    else Math.random() < 0.0008 ? f4++ : f1++;
+                }
+                setRes({f1: res.f1+f1, f4: res.f4+f4});
+            };
+
+            return (
+                <Card className="border-t-4 border-pink-500 animate-fade-in">
+                    <h3 className="font-bold text-pink-400 mb-4 flex items-center gap-2"><Icons.Flask/> SIMULATEUR DE BLEND</h3>
+                    <div className="flex gap-4 mb-6">
+                        <button onClick={()=>setMode('CITY')} className={`flex-1 py-3 rounded font-bold ${mode==='CITY'?'bg-pink-600':'bg-slate-700'}`}>CITY (100% F1)</button>
+                        <button onClick={()=>setMode('BUNKER')} className={`flex-1 py-3 rounded font-bold ${mode==='BUNKER'?'bg-yellow-600':'bg-slate-700'}`}>BUNKER (Chance F4)</button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-center mb-6">
+                        <div className="bg-slate-900 p-4 rounded border border-slate-700">
+                            <div className="text-3xl font-bold text-white">{res.f1}</div>
+                            <div className="text-sm text-slate-500">Communs (F1)</div>
                         </div>
-                        <div className="bg-slate-900 p-4 rounded text-center">
-                            <div className="text-sm text-slate-400 mb-2">INVENTAIRE SIMULÉ</div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><div className="text-2xl font-bold text-white">{inv.F1}</div><div className="text-xs text-slate-500">F1 (Communs)</div></div>
-                                <div><div className="text-2xl font-bold text-yellow-400">{inv.F4}</div><div className="text-xs text-slate-500">F4 (Légendaires)</div></div>
-                            </div>
+                        <div className="bg-slate-900 p-4 rounded border border-yellow-700/30">
+                            <div className="text-3xl font-bold text-yellow-400">{res.f4}</div>
+                            <div className="text-sm text-yellow-600">Légendaires (F4)</div>
                         </div>
                     </div>
+                    <button onClick={sim} className="w-full py-3 bg-pink-700 hover:bg-pink-600 rounded font-bold text-white shadow-lg">OUVRIR 100 PACKS</button>
                 </Card>
             );
         };
 
-        // ==========================================
-        // 4. APP PRINCIPALE (FUSION)
-        // ==========================================
+        // ==================================================================================
+        // 3. APP PRINCIPALE (INTEGRATION TOTALE)
+        // ==================================================================================
+
         const App = () => {
-            const [tab, setTab] = useState('dashboard');
+            const [tab, setTab] = useState('manager');
             const [user, setUser] = useState('u2d2k.c.wam');
             const [waxPrice, setWaxPrice] = useState(0.008);
             const [prices, setPrices] = useState(INITIAL_PRICES);
             
-            // DONNÉES RÉELLES DU SCAN
-            const [realBuildings, setRealBuildings] = useState([]);
-            const [realDivisions, setRealDivisions] = useState([]);
+            // DONNÉES LIVE
+            const [myBuildings, setMyBuildings] = useState([]);
+            const [myDivisions, setMyDivisions] = useState([]);
 
-            // CALCULS FINANCIERS (Issus du Fichier 28 mais appliqués au réel)
-            const financials = useMemo(() => {
-                let prodW = 0, costW = 0, rewardW = 0;
+            // CALCULS FINANCIERS (PHASE 3)
+            const stats = useMemo(() => {
+                let prod = 0, cost = 0, reward = 0;
                 const now = Date.now()/1000;
-
-                // Prod Batiments
-                realBuildings.forEach(b => {
+                myBuildings.forEach(b => {
                     const val = parseFloat(b.pRaw.replace(/[^0-9.]/g, '')) || 0;
-                    let type = 'DOVF';
-                    if(b.pRaw.includes('H')) type='DOVH'; if(b.pRaw.includes('R')) type='DOVR'; if(b.pRaw.includes('S')) type='DOVS';
-                    
-                    // Prod journalière estimée (valeur brute)
-                    prodW += val * prices[type];
-                    costW += (val * 0.1) * prices.DOVX; // Maintenance estimée
+                    prod += val * prices.DOVF; // Simplification TU
+                    cost += (val * 0.1) * prices.DOVX;
                 });
-
-                // Divisions Actives
-                const activeDivs = realDivisions.filter(d => d.end_time > now);
-                activeDivs.forEach(d => {
-                    const z = ZONES_FULL.find(z => z.id === d.zone_id);
-                    if(z) {
-                        rewardW += z.win * prices.DOVX;
-                        const runCost = z.entryCostDovX ? (z.entryCostDovX * prices.DOVX) : (z.usage * 4 * prices.DOVF);
-                        costW += runCost;
+                myDivisions.forEach(d => {
+                    const z = MASTER_ZONES_DB.find(zone => zone.id === d.zoneId);
+                    if(z && d.endTime > now) {
+                        reward += z.reward * prices.DOVX;
+                        cost += z.costX > 0 ? (z.costX * prices.DOVX) : (z.cost * prices.DOVF);
                     }
                 });
-
-                const netW = (prodW + rewardW) - costW;
-                return { prodW, costW, rewardW, netW, netUSD: netW * waxPrice };
-            }, [realBuildings, realDivisions, prices, waxPrice]);
+                const net = (prod + reward) - cost;
+                return { prod, cost, reward, net, netUSD: net * waxPrice };
+            }, [myBuildings, myDivisions, waxPrice]);
 
             return (
-                <div className="max-w-[1600px] mx-auto p-4 min-h-screen">
+                <div className="max-w-[1600px] mx-auto p-4 min-h-screen text-slate-200">
                     {/* HEADER */}
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 border-b border-slate-700 pb-4 gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="bg-blue-600 p-2 rounded"><I.Shield size={32}/></div>
+                            <div className="bg-blue-600 p-2 rounded"><Icons.Shield/></div>
                             <div>
-                                <h1 className="text-2xl font-bold text-white tracking-wider">DoV <span className="text-blue-400">COMMANDER</span> v6.0</h1>
-                                <p className="text-slate-400 text-xs">Ultimate Suite: Scanner + Manager + Simulators</p>
+                                <h1 className="text-2xl font-bold text-white tracking-wider">DoV <span className="text-blue-400">COMMANDER</span> v7.0</h1>
+                                <p className="text-slate-400 text-xs">Full Suite : Manager + Scanner + Combat + Blend</p>
                             </div>
                         </div>
-                        <div className="flex gap-4 bg-slate-800 p-2 rounded items-center text-sm">
-                            <div><span className="text-green-400 font-bold block text-[10px]">WAX ($)</span><input type="number" value={waxPrice} onChange={e=>setWaxPrice(e.target.value)} className="w-20 bg-slate-900 border border-slate-600 rounded px-2 text-white"/></div>
-                            <div><span className="text-slate-400 block text-[10px]">JOUEUR</span><input value={user} onChange={e=>setUser(e.target.value)} className="w-32 bg-slate-900 border border-slate-600 rounded px-2 text-white"/></div>
+                        <div className="flex gap-4 bg-slate-800 p-2 rounded text-sm items-center">
+                            <div><span className="text-[10px] text-green-400 block font-bold">WAX ($)</span><input type="number" value={waxPrice} onChange={e=>setWaxPrice(e.target.value)} className="w-20 bg-slate-900 border border-slate-600 rounded px-2"/></div>
+                            <div><span className="text-[10px] text-slate-400 block">JOUEUR</span><input value={user} onChange={e=>setUser(e.target.value)} className="w-32 bg-slate-900 border border-slate-600 rounded px-2"/></div>
                         </div>
                     </div>
 
-                    {/* NAV TABS */}
-                    <div className="flex gap-2 mb-6 overflow-x-auto">
-                        <button onClick={()=>setTab('dashboard')} className={`px-4 py-2 rounded font-bold flex items-center gap-2 ${tab==='dashboard'?'bg-purple-600 text-white':'bg-slate-800 text-slate-400'}`}><I.Radar/> SCANNER LIVE</button>
-                        <button onClick={()=>setTab('manager')} className={`px-4 py-2 rounded font-bold flex items-center gap-2 ${tab==='manager'?'bg-blue-600 text-white':'bg-slate-800 text-slate-400'}`}><I.Factory/> MANAGER PRO</button>
-                        <button onClick={()=>setTab('combat')} className={`px-4 py-2 rounded font-bold flex items-center gap-2 ${tab==='combat'?'bg-emerald-600 text-white':'bg-slate-800 text-slate-400'}`}><I.Crosshair/> COMBAT</button>
-                        <button onClick={()=>setTab('blend')} className={`px-4 py-2 rounded font-bold flex items-center gap-2 ${tab==='blend'?'bg-pink-600 text-white':'bg-slate-800 text-slate-400'}`}><I.Flask/> BLEND SIM</button>
-                        <button onClick={()=>setTab('valuation')} className={`px-4 py-2 rounded font-bold flex items-center gap-2 ${tab==='valuation'?'bg-cyan-600 text-white':'bg-slate-800 text-slate-400'}`}><I.Scale/> VALORISATION</button>
+                    {/* SCANNER ALWAYS ON TOP */}
+                    <LiveScanner targetUser={user} onUpdate={(b, d) => { setMyBuildings(b); setMyDivisions(d); }} />
+
+                    {/* NAVIGATION TABS */}
+                    <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                        <button onClick={()=>setTab('manager')} className={`px-4 py-2 rounded font-bold flex gap-2 ${tab==='manager'?'bg-blue-600 text-white':'bg-slate-800 text-slate-400'}`}><Icons.Factory/> MANAGER</button>
+                        <button onClick={()=>setTab('combat')} className={`px-4 py-2 rounded font-bold flex gap-2 ${tab==='combat'?'bg-emerald-600 text-white':'bg-slate-800 text-slate-400'}`}><Icons.Crosshair/> COMBAT</button>
+                        <button onClick={()=>setTab('blend')} className={`px-4 py-2 rounded font-bold flex gap-2 ${tab==='blend'?'bg-pink-600 text-white':'bg-slate-800 text-slate-400'}`}><Icons.Flask/> BLEND</button>
+                        <button onClick={()=>setTab('assets')} className={`px-4 py-2 rounded font-bold flex gap-2 ${tab==='assets'?'bg-cyan-600 text-white':'bg-slate-800 text-slate-400'}`}><Icons.Scale/> ASSETS</button>
                     </div>
 
-                    {/* TAB: DASHBOARD (SCANNER) */}
-                    {tab === 'dashboard' && (
-                        <div className="animate-fade-in">
-                            <LiveScanner user={user} onUpdate={(b, d) => { setRealBuildings(b); setRealDivisions(d); }} />
-                            
-                            {/* WALLET PREVIEW */}
-                            {realBuildings.length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                                    <div className="bg-slate-900 p-4 rounded border border-slate-700">
-                                        <div className="text-xs text-slate-400 mb-1">FLUX NET / JOUR</div>
-                                        <div className={`text-2xl font-mono font-bold ${financials.netW>0?'text-emerald-400':'text-red-400'}`}>{financials.netW>0?'+':''}{financials.netW.toFixed(2)} WAX</div>
-                                        <div className="text-xs text-slate-500">${financials.netUSD.toFixed(2)}</div>
-                                    </div>
-                                    <div className="bg-slate-900 p-4 rounded border border-slate-700">
-                                        <div className="text-xs text-slate-400 mb-1">USINES (PROD)</div>
-                                        <div className="text-xl font-mono font-bold text-white">{realBuildings.length}</div>
-                                        <div className="text-xs text-slate-500">dont {realBuildings.filter(b=>b.isReady).length} à claim</div>
-                                    </div>
-                                    <div className="bg-slate-900 p-4 rounded border border-slate-700">
-                                        <div className="text-xs text-slate-400 mb-1">DIVISIONS (ACTIVES)</div>
-                                        <div className="text-xl font-mono font-bold text-orange-400">{realDivisions.filter(d=>d.end_time > Date.now()/1000).length}</div>
-                                        <div className="text-xs text-slate-500">sur {realDivisions.length} totales</div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* TAB: MANAGER (ROI DETAIL) */}
+                    {/* TAB: MANAGER */}
                     {tab === 'manager' && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
-                            <Card>
-                                <h3 className="text-lg font-bold text-blue-400 mb-4">Analyse Financière</h3>
-                                <div className="space-y-4 text-sm">
-                                    <div className="flex justify-between border-b border-slate-700 pb-2"><span>Revenus Usines</span><span className="text-emerald-400">+{financials.prodW.toFixed(2)} W</span></div>
-                                    <div className="flex justify-between border-b border-slate-700 pb-2"><span>Revenus Combats</span><span className="text-emerald-400">+{financials.rewardW.toFixed(2)} W</span></div>
-                                    <div className="flex justify-between border-b border-slate-700 pb-2"><span>Coûts (Maint + Entrée)</span><span className="text-red-400">-{financials.costW.toFixed(2)} W</span></div>
-                                    <div className="bg-slate-900 p-3 rounded text-center mt-4">
-                                        <div className="text-xs text-slate-400">PROFIT NET MENSUEL (ESTIMÉ)</div>
-                                        <div className="text-2xl font-bold text-white">{(financials.netW * 30).toLocaleString()} WAX</div>
-                                        <div className="text-sm text-emerald-500">${(financials.netUSD * 30).toLocaleString()}</div>
+                            <Card className="border-t-4 border-emerald-500">
+                                <h3 className="text-lg font-bold text-white mb-4">Flux Financier (Réel)</h3>
+                                <div className="space-y-3 text-sm">
+                                    <div className="flex justify-between border-b border-slate-700 pb-2"><span>Production Usines</span><span className="text-emerald-400">+{stats.prod.toFixed(2)} W</span></div>
+                                    <div className="flex justify-between border-b border-slate-700 pb-2"><span>Gains Combats</span><span className="text-emerald-400">+{stats.reward.toFixed(2)} W</span></div>
+                                    <div className="flex justify-between border-b border-slate-700 pb-2"><span>Coûts</span><span className="text-red-400">-{stats.cost.toFixed(2)} W</span></div>
+                                    <div className="bg-slate-900 p-4 rounded text-center mt-4">
+                                        <div className="text-xs text-slate-500 uppercase">Cashflow Net / Jour</div>
+                                        <div className={`text-3xl font-bold font-mono ${stats.net>0?'text-blue-400':'text-red-500'}`}>{stats.net>0?'+':''}{stats.net.toFixed(2)} WAX</div>
+                                        <div className="text-sm text-emerald-500">≈ ${stats.netUSD.toFixed(2)}</div>
                                     </div>
                                 </div>
                             </Card>
                             <Card>
-                                <h3 className="text-lg font-bold text-orange-400 mb-4">Base de Données (Référence)</h3>
+                                <h3 className="text-lg font-bold text-orange-400 mb-4">Divisions Actives</h3>
                                 <div className="h-64 overflow-y-auto pr-2 space-y-2">
-                                    {FACTORIES.slice(0, 10).map((f, i) => (
-                                        <div key={i} className="flex justify-between text-xs bg-slate-900 p-2 rounded">
-                                            <span>{f.name}</span><span className="text-slate-400">Prod: {f.output}</span>
-                                        </div>
-                                    ))}
-                                    <div className="text-center text-xs text-slate-500 italic">... et {FACTORIES.length - 10} autres références chargées.</div>
+                                    {myDivisions.length === 0 && <div className="text-center text-slate-500 italic">Aucune division.</div>}
+                                    {myDivisions.map((d, i) => {
+                                        const z = MASTER_ZONES_DB.find(zone => zone.id === d.zoneId);
+                                        const isBusy = d.endTime > Date.now()/1000;
+                                        return (
+                                            <div key={i} className="bg-slate-900 p-2 rounded flex justify-between text-xs border border-slate-700">
+                                                <div><div className="font-bold text-white">{z?z.name:'Zone '+d.zoneId}</div><div className="text-slate-500">#{d.id}</div></div>
+                                                <div className="text-right">{isBusy ? <span className="text-orange-400 font-bold">MISSION</span> : <span className="text-emerald-400 font-bold">PRÊT</span>}</div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </Card>
                         </div>
                     )}
 
                     {/* TAB: COMBAT */}
-                    {tab === 'combat' && (
-                        <div className="animate-fade-in">
-                            <Card>
-                                <h3 className="text-lg font-bold text-emerald-400 mb-4 flex items-center gap-2"><I.Shield/> Préparation Tactique</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="text-xs text-slate-400 block mb-2">SÉLECTIONNER ZONE CIBLE</label>
-                                        <select className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-sm text-white">
-                                            {ZONES_FULL.map(z => <option key={z.id} value={z.id}>{z.name} (Win: {z.win})</option>)}
-                                        </select>
-                                    </div>
-                                    <div className="bg-slate-900 p-4 rounded text-center text-slate-500 text-sm italic">
-                                        Sélectionnez une zone pour voir les prérequis (Clés, Officiers, Godmothers) issus de la base de données.
-                                    </div>
-                                </div>
-                            </Card>
-                        </div>
-                    )}
+                    {tab === 'combat' && <CombatModule waxPrice={waxPrice} />}
 
                     {/* TAB: BLEND */}
-                    {tab === 'blend' && <BlendSim prices={prices} waxPrice={waxPrice}/>}
+                    {tab === 'blend' && <BlendModule />}
 
-                    {/* TAB: VALUATION */}
-                    {tab === 'valuation' && (
-                        <Card className="animate-fade-in border-t-4 border-cyan-500">
-                            <h3 className="text-lg font-bold text-cyan-400 mb-4"><I.Scale/> Fair Value (Valeur Juste)</h3>
-                            <div className="text-sm text-slate-300">
-                                <p className="mb-4">Calcul basé sur le rendement de vos {realBuildings.length} bâtiments scannés.</p>
-                                <div className="bg-slate-900 p-4 rounded flex justify-between items-center">
-                                    <span>Valeur théorique du compte (Basée sur ROI 30j)</span>
-                                    <span className="text-xl font-bold text-white">{(financials.netW * 30).toLocaleString()} WAX</span>
-                                </div>
+                    {/* TAB: ASSETS */}
+                    {tab === 'assets' && (
+                        <div className="animate-fade-in">
+                            <h3 className="text-lg font-bold text-white mb-4">Inventaire ({myBuildings.length})</h3>
+                            <div className="scan-grid">
+                                {myBuildings.map((b, i) => (
+                                    <div key={i} className={`p-2 rounded border text-xs ${b.isReady?'bg-emerald-900/20 border-emerald-800':'bg-slate-800 border-slate-700'}`}>
+                                        <div className="flex justify-between mb-1"><span className="text-slate-500">#{b.asset_id}</span><span className={b.isReady?'text-emerald-400 font-bold':'text-orange-400'}>{b.isReady?'CLAIM':'BUSY'}</span></div>
+                                        <div className="font-mono font-bold text-white">{b.pRaw}</div>
+                                    </div>
+                                ))}
                             </div>
-                        </Card>
+                        </div>
                     )}
-
                 </div>
             );
         };
